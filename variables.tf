@@ -133,7 +133,7 @@ variable "public_facing" {
 }
 
 variable "ssh_public_keys" {
-  type        = "list"
+  type        = "list(string)"
   description = "The ssh public keys that can be used to SSH to the instances in this cluster."
   default     = []
 }
@@ -144,14 +144,14 @@ variable "metadata" {
 }
 
 variable "labels" {
-  type        = "list"
+  type        = "list(string)"
   description = "A list of labels to add to all to docker swarm nodes. Labels may be in the form key=value"
   default     = []
 }
 
 variable "security_group_ids" {
   description = "A list of security group to add the nodes in. Note: if the cluster is `public_facing`, the security groups will only be applied to private ports, not public ports."
-  type        = "list"
+  type        = "list(string)"
   default     = []
 }
 
