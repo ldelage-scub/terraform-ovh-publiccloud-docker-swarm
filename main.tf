@@ -12,7 +12,7 @@ provider "ignition" {
 }
 
 locals {
-  manager_count     = var.manager_count < 0 ? (var.count > 0 && var.count < 3 ? 1 : (var.count > 2 && var.count < 6 ? 3 : 5)) : var.manager_count
+  manager_count     = var.manager_count < 0 ? (var.node_count > 0 && var.node_count < 3 ? 1 : (var.node_count > 2 && var.node_count < 6 ? 3 : 5)) : var.manager_count
   flavor_name       = var.flavor_name != "" ? var.flavor_name : (var.flavor_id == "" ? lookup(var.flavor_names, var.region) : "")
   flavor_label      = format("flavor=%s", (local.flavor_name == "" ? var.flavor_id : local.flavor_name))
   node_labels       = compact(concat(var.labels, list(local.flavor_label, format("region=%s", var.region))))
@@ -29,7 +29,7 @@ data "openstack_images_image_v2" "docker" {
 }
 
 data "openstack_networking_subnet_v2" "subnets" {
-  count        = var.count
+  count        = var.node_count
   subnet_id    = length(var.subnet_ids) > 0 ? format("%s", element(var.subnet_ids, count.index)) : ""
   cidr         = length(var.subnets) > 0 && length(var.subnet_ids) < 1 ? format("%s", element(var.subnets, count.index)) : ""
   ip_version   = 4
@@ -37,14 +37,14 @@ data "openstack_networking_subnet_v2" "subnets" {
 }
 
 resource "openstack_networking_secgroup_v2" "sg" {
-  count = var.count > 0 ? 1 : 0
+  count = var.node_count > 0 ? 1 : 0
 
   name        = "${var.name}_sg"
   description = "${var.name} security group"
 }
 
 resource "openstack_networking_secgroup_rule_v2" "in_80_traffic" {
-  count             = var.public_facing && var.count > 0 ? 1 : 0
+  count             = var.public_facing && var.node_count > 0 ? 1 : 0
   direction         = "ingress"
   ethertype         = "IPv4"
   remote_ip_prefix  = "0.0.0.0/0"
@@ -55,7 +55,7 @@ resource "openstack_networking_secgroup_rule_v2" "in_80_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "in_443_traffic" {
-  count             = var.public_facing && var.count > 0 ? 1 : 0
+  count             = var.public_facing && var.node_count > 0 ? 1 : 0
   direction         = "ingress"
   ethertype         = "IPv4"
   remote_ip_prefix  = "0.0.0.0/0"
@@ -66,7 +66,7 @@ resource "openstack_networking_secgroup_rule_v2" "in_443_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "in_22_traffic" {
-  count             = var.count > 0 ? 1 : 0
+  count             = var.node_count > 0 ? 1 : 0
   direction         = "ingress"
   ethertype         = "IPv4"
   protocol          = "tcp"
@@ -77,7 +77,7 @@ resource "openstack_networking_secgroup_rule_v2" "in_22_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "in_cidr_tcp_traffic" {
-  count = var.count > 0 && var.cidr != "" ? 1 : 0
+  count = var.node_count > 0 && var.cidr != "" ? 1 : 0
 
   direction         = "ingress"
   ethertype         = "IPv4"
@@ -87,7 +87,7 @@ resource "openstack_networking_secgroup_rule_v2" "in_cidr_tcp_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "out_cidr_tcp_traffic" {
-  count = var.count > 0 && var.cidr != "" ? 1 : 0
+  count = var.node_count > 0 && var.cidr != "" ? 1 : 0
 
   direction         = "egress"
   ethertype         = "IPv4"
@@ -97,7 +97,7 @@ resource "openstack_networking_secgroup_rule_v2" "out_cidr_tcp_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "in_cidr_udp_traffic" {
-  count = var.count > 0 && var.cidr != "" ? 1 : 0
+  count = var.node_count > 0 && var.cidr != "" ? 1 : 0
 
   direction         = "ingress"
   ethertype         = "IPv4"
@@ -107,7 +107,7 @@ resource "openstack_networking_secgroup_rule_v2" "in_cidr_udp_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "out_cidr_udp_traffic" {
-  count = var.count > 0 && var.cidr != "" ? 1 : 0
+  count = var.node_count > 0 && var.cidr != "" ? 1 : 0
 
   direction         = "egress"
   ethertype         = "IPv4"
@@ -117,7 +117,7 @@ resource "openstack_networking_secgroup_rule_v2" "out_cidr_udp_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "in_tcp_traffic" {
-  count = var.count > 0 ? 1 : 0
+  count = var.node_count > 0 ? 1 : 0
 
   direction         = "ingress"
   ethertype         = "IPv4"
@@ -127,7 +127,7 @@ resource "openstack_networking_secgroup_rule_v2" "in_tcp_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "out_tcp_traffic" {
-  count = var.count > 0 ? 1 : 0
+  count = var.node_count > 0 ? 1 : 0
 
   direction         = "egress"
   ethertype         = "IPv4"
@@ -137,7 +137,7 @@ resource "openstack_networking_secgroup_rule_v2" "out_tcp_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "in_udp_traffic" {
-  count = var.count > 0 ? 1 : 0
+  count = var.node_count > 0 ? 1 : 0
 
   direction         = "ingress"
   ethertype         = "IPv4"
@@ -147,7 +147,7 @@ resource "openstack_networking_secgroup_rule_v2" "in_udp_traffic" {
 }
 
 resource "openstack_networking_secgroup_rule_v2" "out_udp_traffic" {
-  count = var.count > 0 ? 1 : 0
+  count = var.node_count > 0 ? 1 : 0
 
   direction         = "egress"
   ethertype         = "IPv4"
@@ -162,7 +162,7 @@ data "openstack_networking_network_v2" "ext_net" {
 }
 
 resource "openstack_networking_port_v2" "port_nodes" {
-  count = var.count
+  count = var.node_count
 
   name = "${var.name}_port_${count.index}"
   #  network_id         = "${element(data.openstack_networking_subnet_v2.subnets.*.network_id, count.index)}"
@@ -176,7 +176,7 @@ resource "openstack_networking_port_v2" "port_nodes" {
 }
 
 resource "openstack_networking_port_v2" "public_port_nodes" {
-  count = var.public_facing ? var.count : 0
+  count = var.public_facing ? var.node_count : 0
 
   name               = "${var.name}_public_port_${count.index}"
   network_id         = data.openstack_networking_network_v2.ext_net.id
@@ -219,7 +219,7 @@ IGNITION
 
 data "ignition_systemd_unit" "etcd_init" {
   name  = "etcd-member.service"
-  count = var.count
+  count = var.node_count
 
   dropin {
     name = "20-clct-etcd-member.conf"
@@ -242,7 +242,7 @@ CONTENT
 
 data "ignition_systemd_unit" "etcd_join" {
   name  = "etcd-member.service"
-  count = var.count
+  count = var.node_count
 
   dropin {
     name = "20-clct-etcd-member.conf"
@@ -272,7 +272,7 @@ Restart=on-failure
 RestartSec=10s
 ExecStartPre=/usr/bin/systemctl is-active etcd-member.service
 ExecStart=/bin/sh -c 'docker info | grep -q "Swarm: active" || docker swarm init --advertise-addr ${var.public_facing ? "eth1" : "eth0"}'
-ExecStartPost=/bin/sh -c 'etcdctl set swarm-join $(ip -o route get "${var.count > 0 ? element(data.openstack_networking_subnet_v2.subnets.*.cidr, 0) : "0.0.0.0/0"}" | sed \'s/.*src \\([0-9\\.]*\\) .*/\\1/g\'):2377'
+ExecStartPost=/bin/sh -c 'etcdctl set swarm-join $(ip -o route get "${var.node_count > 0 ? element(data.openstack_networking_subnet_v2.subnets.*.cidr, 0) : "0.0.0.0/0"}" | sed \'s/.*src \\([0-9\\.]*\\) .*/\\1/g\'):2377'
 ExecStartPost=/bin/sh -c 'etcdctl set swarm-manager-token $(docker swarm join-token -q manager)'
 ExecStartPost=/bin/sh -c 'etcdctl set swarm-worker-token $(docker swarm join-token -q worker)'
 
@@ -334,7 +334,7 @@ data "ignition_user" "core" {
 }
 
 data "ignition_config" "swarm" {
-  count    = var.count
+  count    = var.node_count
   networkd = ["${compact(concat(data.ignition_networkd_unit.public.*.id, data.ignition_networkd_unit.private.*.id))}"]
   users    = ["${data.ignition_user.core.id}"]
 
@@ -351,7 +351,7 @@ resource "openstack_compute_servergroup_v2" "nodes" {
 }
 
 resource "openstack_compute_instance_v2" "public_facing_nodes" {
-  count    = var.public_facing ? var.count : 0
+  count    = var.public_facing ? var.node_count : 0
   name     = "${var.name}_public_${count.index}"
   image_id = element(coalescelist(data.openstack_images_image_v2.docker.*.id, list(var.image_id)), 0)
 
@@ -377,7 +377,7 @@ resource "openstack_compute_instance_v2" "public_facing_nodes" {
 }
 
 resource "openstack_compute_instance_v2" "nodes" {
-  count    = var.public_facing ? 0 : var.count
+  count    = var.public_facing ? 0 : var.node_count
   name     = "${var.name}_${count.index}"
   image_id = element(coalescelist(data.openstack_images_image_v2.docker.*.id, list(var.image_id)), 0)
 
